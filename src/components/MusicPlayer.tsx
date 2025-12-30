@@ -6,14 +6,16 @@ import TrackList from './TrackList';
 import albumCover from '@/assets/album-cover.png';
 import introTrack from '@/assets/music/intro.mp3';
 import sendaBellakonaTrack from '@/assets/music/senda-bellakona.mp3';
+import descontrolTrack from '@/assets/music/descontrol.mp3';
+import quemaropaTrack from '@/assets/music/quemaropa.mp3';
 
 // Tracks del álbum "EL NUEVO SONIDO" - S1NAKA
 // Las URLs de audio se configurarán aquí
 const tracks = [
-  { id: 1, title: "Intro El Nuevo Sonido", artist: "S1NAKA", duration: "0:00", audioUrl: introTrack },
-  { id: 2, title: "Senda Bellakona", artist: "S1NAKA", duration: "0:00", audioUrl: sendaBellakonaTrack },
-  { id: 3, title: "Track 3", artist: "S1NAKA", duration: "0:00", audioUrl: "/music/track3.mp3" },
-  { id: 4, title: "Track 4", artist: "S1NAKA", duration: "0:00", audioUrl: "/music/track4.mp3" },
+  { id: 1, title: "INTRO EL NUEVO SONIDO", artist: "S1NAKA", duration: "0:00", audioUrl: introTrack },
+  { id: 2, title: "SENDA BELLAKONA", artist: "S1NAKA", duration: "0:00", audioUrl: sendaBellakonaTrack },
+  { id: 3, title: "DESCONTROL - SINAKA X EASYKID", artist: "S1NAKA", duration: "0:00", audioUrl: descontrolTrack },
+  { id: 4, title: "QUEMAROPA - SINAKA", artist: "S1NAKA", duration: "0:00", audioUrl: quemaropaTrack },
   { id: 5, title: "Track 5", artist: "S1NAKA", duration: "0:00", audioUrl: "/music/track5.mp3" },
   { id: 6, title: "Track 6", artist: "S1NAKA", duration: "0:00", audioUrl: "/music/track6.mp3" },
 ];
@@ -31,8 +33,6 @@ const MusicPlayer = () => {
   const [isSeeking, setIsSeeking] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const nextAudioRef = useRef<HTMLAudioElement | null>(null);
-  const crossfadeIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentTrackData = tracks.find(t => t.id === currentTrack) || tracks[0];
 
@@ -49,10 +49,6 @@ const MusicPlayer = () => {
     if (!audioRef.current) {
       audioRef.current = new Audio();
       audioRef.current.volume = volume / 100;
-    }
-    if (!nextAudioRef.current) {
-      nextAudioRef.current = new Audio();
-      nextAudioRef.current.volume = 0;
     }
   }, []);
 
@@ -115,61 +111,6 @@ const MusicPlayer = () => {
       audio.removeEventListener('error', handleError);
     };
   }, [isSeeking, currentTrack, toast]);
-
-  // Crossfade function
-  const performCrossfade = useCallback((nextTrackId: number) => {
-    if (!audioRef.current || !nextAudioRef.current) return;
-    
-    const nextTrackData = tracks.find(t => t.id === nextTrackId);
-    if (!nextTrackData?.audioUrl) {
-      setCurrentTrack(nextTrackId);
-      setCurrentTime(0);
-      return;
-    }
-
-    nextAudioRef.current.src = nextTrackData.audioUrl;
-    nextAudioRef.current.volume = 0;
-    nextAudioRef.current.play().catch(console.error);
-
-    const startVolume = isMuted ? 0 : volume / 100;
-    const steps = 20;
-    const stepDuration = CROSSFADE_DURATION / steps;
-    let step = 0;
-
-    if (crossfadeIntervalRef.current) {
-      clearInterval(crossfadeIntervalRef.current);
-    }
-
-    crossfadeIntervalRef.current = setInterval(() => {
-      step++;
-      const progress = step / steps;
-      
-      if (audioRef.current) {
-        audioRef.current.volume = startVolume * (1 - progress);
-      }
-      if (nextAudioRef.current) {
-        nextAudioRef.current.volume = startVolume * progress;
-      }
-
-      if (step >= steps) {
-        if (crossfadeIntervalRef.current) {
-          clearInterval(crossfadeIntervalRef.current);
-        }
-        
-        if (audioRef.current) {
-          audioRef.current.pause();
-        }
-        
-        // Swap refs
-        const temp = audioRef.current;
-        audioRef.current = nextAudioRef.current;
-        nextAudioRef.current = temp;
-        
-        setCurrentTrack(nextTrackId);
-        setCurrentTime(0);
-      }
-    }, stepDuration);
-  }, [volume, isMuted]);
 
   const handlePlayPause = async () => {
     if (!audioRef.current) return;
