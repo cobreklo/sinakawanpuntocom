@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Star, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AudioVisualizer from './AudioVisualizer';
@@ -19,8 +19,6 @@ const tracks = [
   { id: 5, title: "Track 5", artist: "S1NAKA", duration: "0:00", audioUrl: "/music/track5.mp3" },
   { id: 6, title: "Track 6", artist: "S1NAKA", duration: "0:00", audioUrl: "/music/track6.mp3" },
 ];
-
-const CROSSFADE_DURATION = 2000; // 2 segundos de crossfade
 
 const MusicPlayer = () => {
   const { toast } = useToast();
@@ -138,22 +136,14 @@ const MusicPlayer = () => {
 
   const handlePrevious = () => {
     const prevId = currentTrack > 1 ? currentTrack - 1 : tracks.length;
-    if (isPlaying && tracks.find(t => t.id === prevId)?.audioUrl) {
-      performCrossfade(prevId);
-    } else {
-      setCurrentTrack(prevId);
-      setCurrentTime(0);
-    }
+    setCurrentTrack(prevId);
+    setCurrentTime(0);
   };
 
   const handleNext = () => {
     const nextId = currentTrack < tracks.length ? currentTrack + 1 : 1;
-    if (isPlaying && tracks.find(t => t.id === nextId)?.audioUrl) {
-      performCrossfade(nextId);
-    } else {
-      setCurrentTrack(nextId);
-      setCurrentTime(0);
-    }
+    setCurrentTrack(nextId);
+    setCurrentTime(0);
   };
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -288,6 +278,7 @@ const MusicPlayer = () => {
             <button 
               onClick={handlePrevious}
               className="w-10 h-8 rounded-sm winamp-button flex items-center justify-center"
+              aria-label="Previous Track"
             >
               <SkipBack className="w-4 h-4" fill="currentColor" />
             </button>
@@ -295,6 +286,7 @@ const MusicPlayer = () => {
             <button 
               onClick={handlePlayPause}
               className="w-14 h-10 rounded-sm glow-button flex items-center justify-center animate-pulse-glow"
+              aria-label={isPlaying ? "Pause" : "Play"}
             >
               {isPlaying ? (
                 <Pause className="w-5 h-5" fill="currentColor" />
@@ -306,6 +298,7 @@ const MusicPlayer = () => {
             <button 
               onClick={handleNext}
               className="w-10 h-8 rounded-sm winamp-button flex items-center justify-center"
+              aria-label="Next Track"
             >
               <SkipForward className="w-4 h-4" fill="currentColor" />
             </button>
@@ -340,13 +333,9 @@ const MusicPlayer = () => {
           tracks={tracks} 
           currentTrack={currentTrack} 
           onTrackSelect={(id) => {
-            if (isPlaying && tracks.find(t => t.id === id)?.audioUrl) {
-              performCrossfade(id);
-            } else {
-              setCurrentTrack(id);
-              setCurrentTime(0);
-              setIsPlaying(true);
-            }
+            setCurrentTrack(id);
+            setCurrentTime(0);
+            setIsPlaying(true);
           }}
           albumCover={albumCover}
         />
