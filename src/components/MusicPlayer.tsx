@@ -45,6 +45,7 @@ const MusicPlayer = () => {
   const [volume, setVolume] = useState(75);
   const [isMuted, setIsMuted] = useState(false);
   const [isSeeking, setIsSeeking] = useState(false);
+  const [trackDurations, setTrackDurations] = useState<{ [key: number]: string }>({});
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -57,6 +58,23 @@ const MusicPlayer = () => {
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
+
+  // Cargar duraciones de todas las canciones
+  useEffect(() => {
+    tracks.forEach(track => {
+      if (track.audioUrl) {
+        const audio = new Audio(track.audioUrl);
+        audio.addEventListener('loadedmetadata', () => {
+          const duration = audio.duration;
+          const formattedDuration = formatTime(duration);
+          setTrackDurations(prev => ({
+            ...prev,
+            [track.id]: formattedDuration
+          }));
+        });
+      }
+    });
+  }, []);
 
   // Inicializar audio
   useEffect(() => {
@@ -186,6 +204,11 @@ const MusicPlayer = () => {
   };
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  const tracksWithDuration = tracks.map(track => ({
+    ...track,
+    duration: trackDurations[track.id] || track.duration
+  }));
 
   return (
     <div className="relative z-20 min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
@@ -346,7 +369,7 @@ const MusicPlayer = () => {
 
         {/* Track list */}
         <TrackList 
-          tracks={tracks} 
+          tracks={tracksWithDuration} 
           currentTrack={currentTrack} 
           onTrackSelect={(id) => {
             setCurrentTrack(id);
