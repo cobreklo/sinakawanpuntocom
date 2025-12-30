@@ -28,7 +28,18 @@ const SUFFIXES = [
     "_2004", "_2005", "_2006", "_2007", "_CL", "_Chile", 
     "_HxC", "_St4r", "_Pkm", "_MSN", "_Flow", "_Xx"
 ];
-const FEEDBACK_MESSAGES = ["nick pokemón generado 🎲", "nombre estilo msn 2006", "flow antiguo activado"];
+const FEEDBACK_MESSAGES = [
+    "nick pokemón generado 🎲", 
+    "nombre estilo msn 2006", 
+    "flow antiguo activado",
+    "corte reggaetonero 2005",
+    "fotolog style on 📸",
+    "nick pa tu zumbido",
+    "generando flow... ⏳",
+    "modo leyenda urbana",
+    "directo al cyber 💻",
+    "nick ready pa la disco 🪩"
+];
 
 const generateRandomNickname = (lastCore?: string) => {
     // Prevent repetition of the same core base
@@ -76,6 +87,7 @@ const Shoutbox = () => {
   const [username, setUsername] = useState("Visitante");
   const [isOpen, setIsOpen] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastFeedbackIndex = useRef<number>(-1);
 
   useEffect(() => {
     audioRef.current = new Audio(msnSound);
@@ -108,8 +120,15 @@ const Shoutbox = () => {
         audioRef.current.play().catch(console.error);
     }
 
-    // Show feedback toast
-    const feedback = FEEDBACK_MESSAGES[Math.floor(Math.random() * FEEDBACK_MESSAGES.length)];
+    // Show feedback toast with non-repeating logic
+    let feedbackIndex;
+    do {
+        feedbackIndex = Math.floor(Math.random() * FEEDBACK_MESSAGES.length);
+    } while (feedbackIndex === lastFeedbackIndex.current && FEEDBACK_MESSAGES.length > 1);
+    
+    lastFeedbackIndex.current = feedbackIndex;
+    const feedback = FEEDBACK_MESSAGES[feedbackIndex];
+
     toast({
         title: feedback,
         description: `Nuevo nick asignado: ${newNick}`,
