@@ -7,6 +7,15 @@ vi.mock('@/assets/music/intro.mp3', () => ({ default: 'intro.mp3' }));
 vi.mock('@/assets/music/senda-bellakona.mp3', () => ({ default: 'senda.mp3' }));
 vi.mock('@/assets/music/descontrol.mp3', () => ({ default: 'descontrol.mp3' }));
 vi.mock('@/assets/music/quemaropa.mp3', () => ({ default: 'quemaropa.mp3' }));
+vi.mock('@/assets/music/azote.mp3', () => ({ default: 'azote.mp3' }));
+vi.mock('@/assets/music/sexo.mp3', () => ({ default: 'sexo.mp3' }));
+vi.mock('@/assets/music/retobala.mp3', () => ({ default: 'retobala.mp3' }));
+vi.mock('@/assets/music/secreto-a-voces.mp3', () => ({ default: 'secreto-a-voces.mp3' }));
+vi.mock('@/assets/music/sube-el-bajo.mp3', () => ({ default: 'sube-el-bajo.mp3' }));
+vi.mock('@/assets/music/scratch.mp3', () => ({ default: 'scratch.mp3' }));
+vi.mock('@/assets/music/4-ruedas.mp3', () => ({ default: '4-ruedas.mp3' }));
+vi.mock('@/assets/music/underground.mp3', () => ({ default: 'underground.mp3' }));
+vi.mock('@/assets/music/maltrato.mp3', () => ({ default: 'maltrato.mp3' }));
 vi.mock('@/assets/album-cover.png', () => ({ default: 'cover.png' }));
 
 // Mock Lucide icons to avoid issues if any

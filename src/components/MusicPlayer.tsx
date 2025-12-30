@@ -8,6 +8,15 @@ import introTrack from '@/assets/music/intro.mp3';
 import sendaBellakonaTrack from '@/assets/music/senda-bellakona.mp3';
 import descontrolTrack from '@/assets/music/descontrol.mp3';
 import quemaropaTrack from '@/assets/music/quemaropa.mp3';
+import azoteTrack from '@/assets/music/azote.mp3';
+import sexoTrack from '@/assets/music/sexo.mp3';
+import retobalaTrack from '@/assets/music/retobala.mp3';
+import secretoAVocesTrack from '@/assets/music/secreto-a-voces.mp3';
+import subeElBajoTrack from '@/assets/music/sube-el-bajo.mp3';
+import scratchTrack from '@/assets/music/scratch.mp3';
+import cuatroRuedasTrack from '@/assets/music/4-ruedas.mp3';
+import undergroundTrack from '@/assets/music/underground.mp3';
+import maltratoTrack from '@/assets/music/maltrato.mp3';
 
 // Tracks del álbum "EL NUEVO SONIDO" - S1NAKA
 // Las URLs de audio se configurarán aquí
@@ -16,8 +25,15 @@ const tracks = [
   { id: 2, title: "SENDA BELLAKONA", artist: "S1NAKA", duration: "0:00", audioUrl: sendaBellakonaTrack },
   { id: 3, title: "DESCONTROL - SINAKA X EASYKID", artist: "S1NAKA", duration: "0:00", audioUrl: descontrolTrack },
   { id: 4, title: "QUEMAROPA - SINAKA", artist: "S1NAKA", duration: "0:00", audioUrl: quemaropaTrack },
-  { id: 5, title: "Track 5", artist: "S1NAKA", duration: "0:00", audioUrl: "/music/track5.mp3" },
-  { id: 6, title: "Track 6", artist: "S1NAKA", duration: "0:00", audioUrl: "/music/track6.mp3" },
+  { id: 5, title: "AZOTE - SINAKA X ENDO", artist: "S1NAKA", duration: "0:00", audioUrl: azoteTrack },
+  { id: 6, title: "SEXO - SINAKA X KENNAT", artist: "S1NAKA", duration: "0:00", audioUrl: sexoTrack },
+  { id: 7, title: "RETOBALA - SINAKA", artist: "S1NAKA", duration: "0:00", audioUrl: retobalaTrack },
+  { id: 8, title: "SECRETO A VOCES - SINAKA FT KING SAVAGGE", artist: "S1NAKA", duration: "0:00", audioUrl: secretoAVocesTrack },
+  { id: 9, title: "SUBE EL BAJO - SINAKA X SAIKO", artist: "S1NAKA", duration: "0:00", audioUrl: subeElBajoTrack },
+  { id: 10, title: "SCRATCH - SINAKA", artist: "S1NAKA", duration: "0:00", audioUrl: scratchTrack },
+  { id: 11, title: "4 RUEDAS - SINAKA X KEVVO", artist: "S1NAKA", duration: "0:00", audioUrl: cuatroRuedasTrack },
+  { id: 12, title: "UNDERGROUND - SINAKA", artist: "S1NAKA", duration: "0:00", audioUrl: undergroundTrack },
+  { id: 13, title: "MALTRATO", artist: "S1NAKA", duration: "0:00", audioUrl: maltratoTrack },
 ];
 
 const MusicPlayer = () => {
