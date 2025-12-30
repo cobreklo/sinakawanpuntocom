@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Dice5 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
 import msnSound from "@/assets/music/msn-sound_1.mp3";
 
 interface Shout {
@@ -14,7 +16,56 @@ interface Shout {
   avatar?: string;
 }
 
+const PREFIXES = ["La_", "El_", "Dj_", "MC_", "Xx_", "-=-", "~*"];
+const CORES = [
+    "Shamakito", "Pokemona", "PerroLoko", "Guachito", "NeneFlow", 
+    "Chorizo", "Malulo", "SangreNueva", "UnderFlow", "ReggaetonCL", 
+    "NeoPerreo", "FlaiteStyle", "Callejero", "Bakan", "Perrin", 
+    "Guacho", "Morenito", "Pichanga", "Flowcito", "CumbiaFlow"
+];
+const MODS = ["xX", "_-", "__", "..", "*", "~x", "Zz"];
+const SUFFIXES = [
+    "_2004", "_2005", "_2006", "_2007", "_CL", "_Chile", 
+    "_HxC", "_St4r", "_Pkm", "_MSN", "_Flow", "_Xx"
+];
+const FEEDBACK_MESSAGES = ["nick pokemón generado 🎲", "nombre estilo msn 2006", "flow antiguo activado"];
+
+const generateRandomNickname = (lastCore?: string) => {
+    // Prevent repetition of the same core base
+    let core;
+    do {
+        core = CORES[Math.floor(Math.random() * CORES.length)];
+    } while (core === lastCore && CORES.length > 1);
+
+    // 70% chance for "standard" generation (Prefix + Core + Suffix)
+    // 30% chance for "weird/chaotic" generation (Mods involved)
+    const isChaotic = Math.random() > 0.7;
+
+    if (isChaotic) {
+        const prefix = Math.random() > 0.3 ? PREFIXES[Math.floor(Math.random() * PREFIXES.length)] : "";
+        const mod = MODS[Math.floor(Math.random() * MODS.length)];
+        const suffix = Math.random() > 0.3 ? SUFFIXES[Math.floor(Math.random() * SUFFIXES.length)] : "";
+        
+        // Randomly place mod either before suffix or wrap core
+        if (Math.random() > 0.5) {
+            return `${prefix}${core}${mod}${suffix}`;
+        } else {
+             return `${prefix}${mod}${core}${suffix}`;
+        }
+    } else {
+        // Standard flow
+        const usePrefix = Math.random() > 0.2; // 80% chance to have prefix
+        const useSuffix = Math.random() > 0.1; // 90% chance to have suffix
+        
+        const prefix = usePrefix ? PREFIXES[Math.floor(Math.random() * PREFIXES.length)] : "";
+        const suffix = useSuffix ? SUFFIXES[Math.floor(Math.random() * SUFFIXES.length)] : "";
+        
+        return `${prefix}${core}${suffix}`;
+    }
+};
+
 const Shoutbox = () => {
+  const { toast } = useToast();
   const [shouts, setShouts] = useState<Shout[]>([
     { id: 1, user: "La_Morenaza_2006", message: "te firmo el log! pasate x el mio sipo!!", time: "Hace 2 min" },
     { id: 2, user: "Dj_Bl4ck_St4r", message: "wena wena perrito, ta pulento el tema nuevo", time: "Hace 15 min" },
@@ -36,6 +87,35 @@ const Shoutbox = () => {
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(console.error);
     }
+  };
+
+  const handleRandomNickname = () => {
+    // Extract current core to avoid repetition if possible (simple heuristic)
+    let lastCore;
+    for (const core of CORES) {
+        if (username.includes(core)) {
+            lastCore = core;
+            break;
+        }
+    }
+
+    const newNick = generateRandomNickname(lastCore);
+    setUsername(newNick);
+    
+    // Play sound
+    if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(console.error);
+    }
+
+    // Show feedback toast
+    const feedback = FEEDBACK_MESSAGES[Math.floor(Math.random() * FEEDBACK_MESSAGES.length)];
+    toast({
+        title: feedback,
+        description: `Nuevo nick asignado: ${newNick}`,
+        duration: 2000,
+        className: "bg-black/90 border-primary text-white font-mono text-xs",
+    });
   };
 
   const handleSend = () => {
@@ -113,12 +193,30 @@ const Shoutbox = () => {
 
         {/* Input Area */}
         <div className="mt-auto pt-2 border-t border-white/10 flex flex-col gap-2">
-          <Input 
-            className="h-7 text-xs bg-black/40 border-primary/30 text-white placeholder:text-white/30 focus-visible:ring-primary/50" 
-            placeholder="Tu Nickname"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
+          <div className="flex gap-2">
+            <Input 
+                className="h-7 text-xs bg-black/40 border-primary/30 text-white placeholder:text-white/30 focus-visible:ring-primary/50 flex-1" 
+                placeholder="Tu Nickname"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+            />
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                            size="icon"
+                            className="h-7 w-7 bg-fuchsia-600 hover:bg-fuchsia-500 shadow-[0_0_10px_rgba(192,38,211,0.5)] border border-fuchsia-400/50 shrink-0 group"
+                            onClick={handleRandomNickname}
+                        >
+                            <Dice5 className="w-4 h-4 text-white group-hover:animate-spin-slow" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-[#ffffcc] border border-black text-black text-xs font-mono p-1 shadow-md rounded-none">
+                        <p>Nombre al azar, corte pokemón</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+          </div>
           <div className="flex gap-2">
             <Input 
               className="h-8 text-xs bg-black/40 border-primary/30 text-white placeholder:text-white/30 focus-visible:ring-primary/50" 
