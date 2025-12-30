@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Send } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import msnSound from "@/assets/music/msn-sound_1.mp3";
 
 interface Shout {
   id: number;
@@ -23,6 +24,19 @@ const Shoutbox = () => {
   const [newMessage, setNewMessage] = useState("");
   const [username, setUsername] = useState("Visitante");
   const [isOpen, setIsOpen] = useState(true);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    audioRef.current = new Audio(msnSound);
+  }, []);
+
+  const handleOpen = () => {
+    setIsOpen(true);
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(console.error);
+    }
+  };
 
   const handleSend = () => {
     if (!newMessage.trim()) return;
@@ -41,7 +55,7 @@ const Shoutbox = () => {
   if (!isOpen) {
     return (
       <Button 
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpen}
         className="fixed bottom-4 right-4 z-40 bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg hover:from-blue-700 hover:to-blue-900 border border-white/20"
       >
         <span className="animate-pulse mr-2">💬</span> Abrir Shoutbox
