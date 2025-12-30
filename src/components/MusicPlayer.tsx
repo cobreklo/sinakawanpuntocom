@@ -214,7 +214,7 @@ const MusicPlayer = () => {
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
+    <div className="relative z-20 min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
       {/* Header MSN/Pokemón chileno style */}
       <div className="text-center mb-6">
         <div className="flex items-center justify-center gap-2 mb-2">
