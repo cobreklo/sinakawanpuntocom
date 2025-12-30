@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Star, Sparkles } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Star, Sparkles, Shuffle, Repeat, Repeat1, Infinity } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AudioVisualizer from './AudioVisualizer';
 import TrackList from './TrackList';
@@ -45,6 +45,8 @@ const MusicPlayer = () => {
   const [volume, setVolume] = useState(75);
   const [isMuted, setIsMuted] = useState(false);
   const [isSeeking, setIsSeeking] = useState(false);
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [repeatMode, setRepeatMode] = useState<'off' | 'all' | 'one'>('off');
   const [trackDurations, setTrackDurations] = useState<{ [key: number]: string }>({});
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -118,7 +120,19 @@ const MusicPlayer = () => {
     };
 
     const handleEnded = () => {
-      handleNext();
+      if (repeatMode === 'one' && audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(console.error);
+      } else if (repeatMode === 'all' || isShuffle) {
+        handleNext();
+      } else {
+        // off mode: stop at end of playlist
+        if (currentTrack < tracks.length) {
+          handleNext();
+        } else {
+          setIsPlaying(false);
+        }
+      }
     };
 
     const handleError = (e: Event) => {
@@ -169,15 +183,55 @@ const MusicPlayer = () => {
   };
 
   const handlePrevious = () => {
+    if (repeatMode === 'one') {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        if (!isPlaying) {
+          audioRef.current.play().catch(console.error);
+          setIsPlaying(true);
+        }
+      }
+      return;
+    }
+
     const prevId = currentTrack > 1 ? currentTrack - 1 : tracks.length;
     setCurrentTrack(prevId);
     setCurrentTime(0);
   };
 
   const handleNext = () => {
-    const nextId = currentTrack < tracks.length ? currentTrack + 1 : 1;
-    setCurrentTrack(nextId);
+    if (repeatMode === 'one') {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        if (!isPlaying) {
+          audioRef.current.play().catch(console.error);
+          setIsPlaying(true);
+        }
+      }
+      return;
+    }
+
+    if (isShuffle) {
+      let nextId;
+      do {
+        nextId = Math.floor(Math.random() * tracks.length) + 1;
+      } while (nextId === currentTrack && tracks.length > 1);
+      setCurrentTrack(nextId);
+    } else {
+      const nextId = currentTrack < tracks.length ? currentTrack + 1 : 1;
+      setCurrentTrack(nextId);
+    }
     setCurrentTime(0);
+  };
+
+  const toggleShuffle = () => {
+    setIsShuffle(!isShuffle);
+  };
+
+  const toggleRepeat = () => {
+    if (repeatMode === 'off') setRepeatMode('all');
+    else if (repeatMode === 'all') setRepeatMode('one');
+    else setRepeatMode('off');
   };
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -315,6 +369,23 @@ const MusicPlayer = () => {
           {/* Control buttons - Winamp style */}
           <div className="flex items-center justify-center gap-2 mt-4">
             <button 
+              onClick={toggleRepeat}
+              className={`w-10 h-8 rounded-sm winamp-button flex items-center justify-center transition-colors ${
+                repeatMode !== 'off' ? 'text-primary border-primary/50 shadow-[0_0_8px_rgba(255,0,128,0.4)]' : ''
+              }`}
+              aria-label="Repeat"
+              title={repeatMode === 'all' ? 'Repetir Todo' : repeatMode === 'one' ? 'Repetir Una' : 'No Repetir'}
+            >
+              {repeatMode === 'one' ? (
+                <Repeat1 className="w-4 h-4" />
+              ) : repeatMode === 'all' ? (
+                <Infinity className="w-4 h-4" />
+              ) : (
+                <Repeat className="w-4 h-4 text-muted-foreground" />
+              )}
+            </button>
+
+            <button 
               onClick={handlePrevious}
               className="w-10 h-8 rounded-sm winamp-button flex items-center justify-center"
               aria-label="Previous Track"
@@ -340,6 +411,17 @@ const MusicPlayer = () => {
               aria-label="Next Track"
             >
               <SkipForward className="w-4 h-4" fill="currentColor" />
+            </button>
+
+            <button 
+              onClick={toggleShuffle}
+              className={`w-10 h-8 rounded-sm winamp-button flex items-center justify-center transition-colors ${
+                isShuffle ? 'text-primary border-primary/50 shadow-[0_0_8px_rgba(255,0,128,0.4)]' : ''
+              }`}
+              aria-label="Shuffle"
+              title="Aleatorio"
+            >
+              <Shuffle className="w-4 h-4" />
             </button>
           </div>
 
