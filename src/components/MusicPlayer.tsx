@@ -1,23 +1,27 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Star, Sparkles } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import AudioVisualizer from './AudioVisualizer';
 import TrackList from './TrackList';
 import albumCover from '@/assets/album-cover.png';
+import introTrack from '@/assets/music/intro.mp3';
+import sendaBellakonaTrack from '@/assets/music/senda-bellakona.mp3';
 
 // Tracks del álbum "EL NUEVO SONIDO" - S1NAKA
 // Las URLs de audio se configurarán aquí
 const tracks = [
-  { id: 1, title: "Track 1", artist: "S1NAKA", duration: "0:00", audioUrl: "" },
-  { id: 2, title: "Track 2", artist: "S1NAKA", duration: "0:00", audioUrl: "" },
-  { id: 3, title: "Track 3", artist: "S1NAKA", duration: "0:00", audioUrl: "" },
-  { id: 4, title: "Track 4", artist: "S1NAKA", duration: "0:00", audioUrl: "" },
-  { id: 5, title: "Track 5", artist: "S1NAKA", duration: "0:00", audioUrl: "" },
-  { id: 6, title: "Track 6", artist: "S1NAKA", duration: "0:00", audioUrl: "" },
+  { id: 1, title: "Intro El Nuevo Sonido", artist: "S1NAKA", duration: "0:00", audioUrl: introTrack },
+  { id: 2, title: "Senda Bellakona", artist: "S1NAKA", duration: "0:00", audioUrl: sendaBellakonaTrack },
+  { id: 3, title: "Track 3", artist: "S1NAKA", duration: "0:00", audioUrl: "/music/track3.mp3" },
+  { id: 4, title: "Track 4", artist: "S1NAKA", duration: "0:00", audioUrl: "/music/track4.mp3" },
+  { id: 5, title: "Track 5", artist: "S1NAKA", duration: "0:00", audioUrl: "/music/track5.mp3" },
+  { id: 6, title: "Track 6", artist: "S1NAKA", duration: "0:00", audioUrl: "/music/track6.mp3" },
 ];
 
 const CROSSFADE_DURATION = 2000; // 2 segundos de crossfade
 
 const MusicPlayer = () => {
+  const { toast } = useToast();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState(1);
   const [currentTime, setCurrentTime] = useState(0);
@@ -89,16 +93,28 @@ const MusicPlayer = () => {
       handleNext();
     };
 
+    const handleError = (e: Event) => {
+      console.error("Audio playback error:", e);
+      setIsPlaying(false);
+      toast({
+        title: "Error de reproducción",
+        description: "No se pudo reproducir el archivo de audio.",
+        variant: "destructive",
+      });
+    };
+
     audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('loadedmetadata', updateDuration);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
 
     return () => {
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('loadedmetadata', updateDuration);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
     };
-  }, [isSeeking, currentTrack]);
+  }, [isSeeking, currentTrack, toast]);
 
   // Crossfade function
   const performCrossfade = useCallback((nextTrackId: number) => {
@@ -155,17 +171,28 @@ const MusicPlayer = () => {
     }, stepDuration);
   }, [volume, isMuted]);
 
-  const handlePlayPause = () => {
+  const handlePlayPause = async () => {
     if (!audioRef.current) return;
     
     if (isPlaying) {
       audioRef.current.pause();
+      setIsPlaying(false);
     } else {
       if (currentTrackData.audioUrl) {
-        audioRef.current.play().catch(console.error);
+        try {
+          await audioRef.current.play();
+          setIsPlaying(true);
+        } catch (error) {
+          console.error("Play error:", error);
+          toast({
+             title: "Error",
+             description: "No se pudo iniciar la reproducción.",
+             variant: "destructive"
+          });
+          setIsPlaying(false);
+        }
       }
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handlePrevious = () => {
