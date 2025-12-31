@@ -278,7 +278,7 @@ const MusicPlayer = () => {
         </h1>
         <div className="flex items-center justify-center gap-1 mt-2">
           <Star className="w-3 h-3 text-primary star-glow" />
-          <p className="text-primary/80 text-xs msn-text">★ pOkEmOnA mUsIc 2007 ★</p>
+          <p className="text-primary/80 text-xs msn-text">★ s1nAkA mUsIc ★</p>
           <Star className="w-3 h-3 text-primary star-glow" />
         </div>
       </div>
@@ -465,7 +465,7 @@ const MusicPlayer = () => {
       {/* Footer MSN style */}
       <div className="mt-6 text-center">
         <p className="text-[10px] text-silver msn-text">
-          ★·.·´¯`·.·★ pOkEmOnA cHiLeNa 4EvEr ★·.·´¯`·.·★
+          ★·.·´¯`·.·★ pOkEmOn cHiLe 4EvEr ★·.·´¯`·.·★
         </p>
         <p className="text-[10px] text-primary/60 mt-1 font-mono">
           © 2007 S1NAKA - EL NUEVO SONIDO
