@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Star, Sparkles, Shuffle, Repeat, Repeat1, Infinity } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AudioVisualizer from './AudioVisualizer';
@@ -50,6 +50,8 @@ const MusicPlayer = () => {
   const [trackDurations, setTrackDurations] = useState<{ [key: number]: string }>({});
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const volumeBarRef = useRef<HTMLDivElement>(null);
+  const [isDraggingVolume, setIsDraggingVolume] = useState(false);
 
   const currentTrackData = tracks.find(t => t.id === currentTrack) || tracks[0];
 
@@ -243,15 +245,52 @@ const MusicPlayer = () => {
     setCurrentTime(newTime);
   };
 
-  const handleVolumeChange = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const percent = (e.clientX - rect.left) / rect.width;
-    const newVolume = Math.max(0, Math.min(100, percent * 100));
-    setVolume(newVolume);
-    if (isMuted && newVolume > 0) {
-      setIsMuted(false);
+  const updateVolumeFromClientX = useCallback((clientX: number) => {
+    if (volumeBarRef.current) {
+      const rect = volumeBarRef.current.getBoundingClientRect();
+      const percent = (clientX - rect.left) / rect.width;
+      const newVolume = Math.max(0, Math.min(100, percent * 100));
+      setVolume(newVolume);
+      if (newVolume > 0) {
+        setIsMuted(false);
+      }
     }
+  }, []);
+
+  const handleVolumeMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+    setIsDraggingVolume(true);
+    const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+    updateVolumeFromClientX(clientX);
   };
+
+  useEffect(() => {
+    if (isDraggingVolume) {
+      const handleMouseMove = (e: MouseEvent) => {
+        e.preventDefault(); // Prevent selection
+        updateVolumeFromClientX(e.clientX);
+      };
+      
+      const handleTouchMove = (e: TouchEvent) => {
+        // e.preventDefault(); // Often needed to prevent scrolling, but passive listeners issue in some browsers if not handled carefully.
+        // For now, rely on touch-action: none CSS.
+        updateVolumeFromClientX(e.touches[0].clientX);
+      };
+
+      const handleMouseUp = () => setIsDraggingVolume(false);
+
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('touchmove', handleTouchMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('touchend', handleMouseUp);
+
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('touchmove', handleTouchMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+        window.removeEventListener('touchend', handleMouseUp);
+      };
+    }
+  }, [isDraggingVolume, updateVolumeFromClientX]);
 
   const toggleMute = () => {
     setIsMuted(!isMuted);
@@ -435,8 +474,10 @@ const MusicPlayer = () => {
               )}
             </button>
             <div 
-              className="relative flex-1 h-2 bg-muted rounded-sm overflow-hidden cursor-pointer border border-primary/20"
-              onClick={handleVolumeChange}
+              ref={volumeBarRef}
+              className="relative flex-1 h-2 bg-muted rounded-sm overflow-hidden cursor-pointer border border-primary/20 touch-none"
+              onMouseDown={handleVolumeMouseDown}
+              onTouchStart={handleVolumeMouseDown}
             >
               <div 
                 className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary to-accent"
