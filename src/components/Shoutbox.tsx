@@ -15,6 +15,21 @@ interface Shout {
   time: string;
   avatar?: string;
 }
+// Agrega esto arriba, junto a las otras constantes
+const BAD_WORDS = [
+    // --- 1. POLÍTICA Y CONTINGENCIA (Para evitar peleas eternas) ---
+    // Nombres y figuras
+    "boric", "merluzo", "kast", "republicano", "pinochet", "allende",
+    "piñera", "bachelet", "jackson", "vallejo", "matthei", "kaiser",
+    "milei", "maduro", "chavez", "bukele", "trump", "biden",
+    
+    // Términos polarizantes
+    "facho", "fachito", "comunista", "comunacho", "zurdo", "zurdito",
+    "momio", "upeliento", "patriota", "libertario", "progre", "ñuñoino",
+    "apruebo", "rechazo", "estallido", "dignidad", "primera linea", "pacos", "yuta",
+    "dictador", "dictadura", "golpe", "pronunciamiento", "ddhh",
+    "constitucion", "plebiscito", "senado", "diputado", "gobierno",
+    "onu", "agenda 2030", "globalista", "plandemia", "vacuna",
 
 const PREFIXES = ["La_", "El_", "Dj_", "MC_", "Xx_", "-=-", "~*"];
 const CORES = [
