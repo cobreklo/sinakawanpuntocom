@@ -84,17 +84,45 @@ const BAD_WORDS = [
     "crypto", "bitcoin", "nft", "dinero", "ganar", "inversion"
 ];
 
+const LEET_MAP: Record<string, string> = { 
+    'a': '[a4@]', 
+    'e': '[e3]', 
+    'i': '[i1!|]', 
+    'o': '[o0]', 
+    'u': '[uv]', 
+    's': '[s5$z]', 
+    't': '[t7]', 
+    'b': '[b8]', 
+    'g': '[g69]', 
+    'l': '[l1|]', 
+};
+
 // Función para censurar texto
 const censorMessage = (text: string) => {
     let cleanedText = text;
+
     BAD_WORDS.forEach(word => {
-        // IMPORTANTE: Escapar la palabra para evitar errores con '+', '.', etc.
-        const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(escapedWord, "gi"); 
-        // Reemplaza con asteriscos del mismo largo
-        cleanedText = cleanedText.replace(regex, "*".repeat(word.length));
-    });
-    return cleanedText;
+        // 1. Construir el patrón Regex inteligente 
+        // Por cada letra de la mala palabra, si existe en LEET_MAP, usamos su patrón. 
+        // Si no, escapamos el caracter (para evitar el error de +569). 
+        const regexPattern = word.split('').map(char => { 
+            const lowerChar = char.toLowerCase(); 
+            if (LEET_MAP[lowerChar]) { 
+                return LEET_MAP[lowerChar]; 
+            } 
+            // Escapar caracteres especiales de regex (+, *, ., etc) 
+            return char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
+        }).join(''); 
+
+        // 2. Crear la RegExp global e insensible a mayúsculas 
+        // El flag 'i' ya maneja mayúsculas/minúsculas estándar, el mapa maneja números. 
+        const regex = new RegExp(regexPattern, "gi"); 
+
+        // 3. Reemplazar 
+        cleanedText = cleanedText.replace(regex, (match) => "*".repeat(match.length)); 
+    }); 
+
+    return cleanedText; 
 };
 // Configuración de Nombres (sin cambios)
 const PREFIXES = ["La_", "El_", "Dj_", "MC_", "Xx_", "-=-", "~*"];
