@@ -19,7 +19,82 @@ interface Shout {
   timestamp: any; // Firestore Timestamp
   avatar?: string;
 }
+// Agrega esto arriba, junto a las otras constantes
+const BAD_WORDS = [
+    // --- 1. POLÍTICA Y CONTINGENCIA (Para evitar peleas eternas) ---
+    // Nombres y figuras
+    "boric", "merluzo", "kast", "republicano", "pinochet", "allende",
+    "piñera", "bachelet", "jackson", "vallejo", "matthei", "kaiser",
+    "milei", "maduro", "chavez", "bukele", "trump", "biden",
+    
+    // Términos polarizantes
+    "facho", "fachito", "comunista", "comunacho", "zurdo", "zurdito",
+    "momio", "upeliento", "patriota", "libertario", "progre", "ñuñoino",
+    "apruebo", "rechazo", "estallido", "dignidad", "primera linea", "pacos", "yuta",
+    "dictador", "dictadura", "golpe", "pronunciamiento", "ddhh",
+    "constitucion", "plebiscito", "senado", "diputado", "gobierno",
+    "onu", "agenda 2030", "globalista", "plandemia", "vacuna",
 
+    // --- 2. XENOFOBIA Y RACISMO (Tolerancia Cero) ---
+    // Gentilicios usados como insulto en chats
+    "veneco", "venezolano", "haitiano", "masisi", "colombiano",
+    "peruano", "boliviano", "argentino", "dominicano",
+    "israel", "palestina", "judio", "nazi", "hitler",
+    
+    // Insultos racistas directos
+    "sudaca", "negro", "mono", "simio", "esclavo", "raza",
+    "extranjero", "inmigrante", "ilegal", "balsa", "patera",
+    "indio", "araucano", "mapuche", "wallmapu", "terrorista",
+
+    // --- 3. DISCRIMINACIÓN, GÉNERO Y ODIO ---
+    // Homofobia/Transfobia
+    "maraco", "maraca", "fleto", "coliz", "hueco", "sidoso",
+    "trabuco", "trava", "camiona", "lela", "tortillera", "caballo",
+    "invertido", "sodomita", "degenerado", "femi", "feminazi", "aliade",
+    "incel", "virgo", "beta", "alpha",
+
+    // Capacitismo (Burlarse de condiciones)
+    "mongolico", "mongo", "retrasado", "down", "autista", "asperger",
+    "esquizo", "bipolar", "loco", "enfermo", "discapacitado", "cojo", "manco",
+
+    // --- 4. VIOLENCIA, CRIMEN Y DROGAS DURAS ---
+    // Delitos
+    "viola", "violador", "violacion", "abuso", "pedofilo", "pedofilia", "cp",
+    "suicidio", "matate", "muérete", "ahorcate", "balazo", "apuñalar", "degollar",
+    "sicario", "tren de aragua", "narco", "traficante", "microtrafico",
+    
+    // Drogas (Evitar venta o apología dura - Marihuana suele tolerarse, esto es lo pesado)
+    "pasta", "pasta base", "angustiado", "tussi", "keta", "fentanilo",
+    "cocaina", "jale", "falopa", "dealer", "mano", "vendo", "compro",
+
+    // --- 5. CONTENIDO SEXUAL EXPLÍCITO Y VULGARIDAD EXTREMA ---
+    // Partes y actos (Más allá del garabato simple)
+    "pene", "vagina", "anal", "oral", "semen", "leche", "chorro", "orgasmo",
+    "porn", "porno", "xxx", "hentai", "pack", "nudes", "cam", "onlyfans",
+    "incesto", "zoofilia", "bestialismo", "scat", "gore",
+
+    // --- 6. SPAM TÉCNICO Y PROMOCIÓN ---
+    // Enlaces y dominios
+    "http", "https", "www", ".com", ".cl", ".net", ".org", ".io", ".xyz",
+    "bit.ly", "goo.gl", "tinyurl", "linktr.ee",
+    
+    // Plataformas y contactos (Para que no pasen datos)
+    "whatsapp", "+569", "telegram", "discord", "instagram", "tiktok", "@",
+    "sigueme", "follow", "suscribete", "vendo cuenta", "regalo", "sorteo",
+    "crypto", "bitcoin", "nft", "dinero", "ganar", "inversion"
+];
+
+// Función para censurar texto
+const censorMessage = (text: string) => {
+    let cleanedText = text;
+    BAD_WORDS.forEach(word => {
+        // Crea una expresión regular que busca la palabra sin importar mayúsculas/minúsculas
+        const regex = new RegExp(word, "gi"); 
+        // Reemplaza con asteriscos del mismo largo
+        cleanedText = cleanedText.replace(regex, "*".repeat(word.length));
+    });
+    return cleanedText;
+};
 // Configuración de Nombres (sin cambios)
 const PREFIXES = ["La_", "El_", "Dj_", "MC_", "Xx_", "-=-", "~*"];
 const CORES = [
@@ -172,10 +247,13 @@ const Shoutbox = () => {
     setIsSending(true);
 
     try {
+        // CENSURA: Filtrar mensaje antes de enviar
+        const cleanedMessage = censorMessage(newMessage);
+
         // FIREBASE: Guardar en la nube
         await addDoc(collection(db, "shouts"), {
             user: username || "Anonimo",
-            message: newMessage,
+            message: cleanedMessage,
             timestamp: serverTimestamp(), // Hora del servidor (importante para orden global)
             avatar: "", // Opcional
         });
