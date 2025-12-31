@@ -88,8 +88,9 @@ const BAD_WORDS = [
 const censorMessage = (text: string) => {
     let cleanedText = text;
     BAD_WORDS.forEach(word => {
-        // Crea una expresión regular que busca la palabra sin importar mayúsculas/minúsculas
-        const regex = new RegExp(word, "gi"); 
+        // IMPORTANTE: Escapar la palabra para evitar errores con '+', '.', etc.
+        const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(escapedWord, "gi"); 
         // Reemplaza con asteriscos del mismo largo
         cleanedText = cleanedText.replace(regex, "*".repeat(word.length));
     });
