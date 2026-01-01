@@ -23,3 +23,13 @@ Este proyecto utiliza las siguientes librerías y herramientas:
 * **Manejo de Estado y Datos**: React Query (@tanstack/react-query).
 * **Iconografía**: Lucide React.
 
+📂 Estructura del Proyecto
+src/
+├── assets/          # Archivos estáticos (música mp3, imágenes)
+├── components/      # Componentes de React (MusicPlayer, Shoutbox, UI)
+├── hooks/           # Hooks personalizados (use-mobile, use-toast)
+├── lib/             # Utilidades y configuración (firebase.ts, utils.ts)
+├── pages/           # Páginas principales (Index.tsx)
+└── main.tsx         # Punto de entrada de la aplicación
+
+Creado con ❤️ para la cultura underground.
