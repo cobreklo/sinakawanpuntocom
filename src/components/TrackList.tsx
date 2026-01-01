@@ -22,7 +22,7 @@ const TrackList = ({ tracks, currentTrack, onTrackSelect, albumCover }: TrackLis
       <div className="flex items-center gap-2 mb-2 pb-2 border-b border-border bg-gradient-to-r from-[#0a246a]/50 to-transparent -mx-3 -mt-3 px-3 pt-2 rounded-t-lg">
         <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_6px_rgba(74,222,128,0.8)]" />
         <Disc3 className="w-3 h-3 text-primary animate-spin-slow" />
-        <span className="text-xs font-bold msn-text uppercase tracking-wider">mIs CoNtAcToS mUsIcAlEs</span>
+        <span className="text-xs font-bold msn-text uppercase tracking-wider">EL NUEVO SONIDO</span>
         <Star className="w-3 h-3 text-primary star-glow ml-auto" />
       </div>
       
