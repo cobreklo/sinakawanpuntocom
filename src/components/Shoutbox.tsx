@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, Dice5, ShieldCheck, Wifi, WifiOff } from 'lucide-react';
+import { Send, Dice5, ShieldCheck, Wifi, WifiOff, Smile } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import msnSound from "@/assets/music/msn-sound_1.mp3";
 
 // Importaciones de Firebase
 import { db } from "@/lib/firebase";
 import { collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp, Timestamp } from "firebase/firestore";
+import { parseMessage, EMOTICON_MAP } from "@/utils/emoticons";
 
 interface Shout {
   id: string;
@@ -170,6 +172,7 @@ const formatDate = (timestamp: any) => {
 
 const Shoutbox = () => {
   const { toast } = useToast();
+  const inputRef = useRef<HTMLInputElement>(null);
   
   const [shouts, setShouts] = useState<Shout[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -177,6 +180,7 @@ const Shoutbox = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [isOnline, setIsOnline] = useState(false); // Estado de conexión
   const [isSending, setIsSending] = useState(false);
+  const [lastShoutTime, setLastShoutTime] = useState(0);
 
   // Lógica Anti-Spam
   const [sessionMessageCount, setSessionMessageCount] = useState(0); 
@@ -256,8 +260,44 @@ const Shoutbox = () => {
     });
   };
 
+  const insertEmoticon = (code: string) => {
+    const input = inputRef.current;
+    if (input) {
+      // Insertar en la posición del cursor
+      const start = input.selectionStart || 0;
+      const end = input.selectionEnd || 0;
+      const text = newMessage;
+      const newText = text.substring(0, start) + code + text.substring(end);
+      setNewMessage(newText);
+      
+      // Devolver el foco al input y poner el cursor después del emoji
+      setTimeout(() => {
+        input.focus();
+        input.setSelectionRange(start + code.length, start + code.length);
+      }, 0);
+    } else {
+      // Fallback por si no hay ref
+      setNewMessage(prev => prev + code);
+    }
+  };
+
   const handleSend = async () => {
     if (!newMessage.trim()) return;
+
+    // VALIDACIÓN COOLDOWN (15 segundos)
+    const now = Date.now();
+    const timeSinceLastShout = now - lastShoutTime;
+    const cooldownMs = 15000;
+
+    if (timeSinceLastShout < cooldownMs) {
+        const secondsRemaining = Math.ceil((cooldownMs - timeSinceLastShout) / 1000);
+        toast({
+            title: "⏳ Calma tu flow",
+            description: `Espera ${secondsRemaining} segundos antes de enviar otro mensaje.`,
+            variant: "destructive",
+        });
+        return;
+    }
 
     // VALIDACIÓN ANTI-SPAM
     if (sessionMessageCount >= 1 && captcha) {
@@ -289,6 +329,7 @@ const Shoutbox = () => {
 
         setNewMessage("");
         setSessionMessageCount(prev => prev + 1);
+        setLastShoutTime(Date.now());
         
         // Activar captcha para el siguiente
         if (sessionMessageCount >= 0) {
@@ -388,7 +429,7 @@ const Shoutbox = () => {
                     </div>
                   </div>
                   <p className="text-xs text-foreground/90 break-words leading-tight bg-white/5 p-2 rounded-sm mt-0.5 border border-white/5 shadow-inner">
-                    {shout.message}
+                    {parseMessage(shout.message)}
                   </p>
                 </div>
               </div>
@@ -439,7 +480,41 @@ const Shoutbox = () => {
           )}
 
           <div className="flex gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="h-8 w-8 shrink-0 text-yellow-400 hover:text-yellow-300 hover:bg-white/10"
+                >
+                  <Smile className="w-5 h-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-2 bg-white/95 border-2 border-blue-500 shadow-xl" side="top" align="start">
+                <ScrollArea className="h-48 w-full pr-2">
+                  <div className="grid grid-cols-6 gap-1">
+                    {Object.entries(EMOTICON_MAP).map(([code, filename]) => (
+                      <button
+                        key={code}
+                        onClick={() => insertEmoticon(code)}
+                        className="p-1 hover:bg-blue-100 rounded transition-colors flex items-center justify-center"
+                        title={code}
+                      >
+                        <img 
+                          src={`/emoticons/${filename}`} 
+                          alt={code} 
+                          className="w-5 h-5 object-contain"
+                          style={{ imageRendering: 'pixelated' }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
+
             <Input 
+              ref={inputRef}
               className="h-8 text-xs bg-black/40 border-primary/30 text-white placeholder:text-white/30 focus-visible:ring-primary/50" 
               placeholder={sessionMessageCount > 0 && captcha ? "Resuelve la suma..." : "Escribe un mensaje..."}
               value={newMessage}
