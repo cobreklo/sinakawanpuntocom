@@ -1,13 +1,26 @@
 import { useState, useEffect, useRef } from 'react';
+<<<<<<< HEAD
 import { Send, Dice5 } from 'lucide-react';
+=======
+import { Send, Dice5, ShieldCheck, Wifi, WifiOff, Smile } from 'lucide-react';
+>>>>>>> e173e6c (feat(emoticons): add msn-style emoticons with parser and picker)
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import msnSound from "@/assets/music/msn-sound_1.mp3";
 
+<<<<<<< HEAD
+=======
+// Importaciones de Firebase
+import { db } from "@/lib/firebase";
+import { collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp, Timestamp } from "firebase/firestore";
+import { parseMessage, EMOTICON_MAP } from "@/utils/emoticons";
+
+>>>>>>> e173e6c (feat(emoticons): add msn-style emoticons with parser and picker)
 interface Shout {
   id: number;
   user: string;
@@ -92,15 +105,33 @@ const generateRandomNickname = (lastCore?: string) => {
 
 const Shoutbox = () => {
   const { toast } = useToast();
+<<<<<<< HEAD
   const [shouts, setShouts] = useState<Shout[]>([
     { id: 1, user: "La_Morenaza_2006", message: "te firmo el log! pasate x el mio sipo!!", time: "Hace 2 min" },
     { id: 2, user: "Dj_Bl4ck_St4r", message: "wena wena perrito, ta pulento el tema nuevo", time: "Hace 15 min" },
     { id: 3, user: "K-tita_Princess", message: "agregame a msn plisss, te deje comments +10", time: "Hace 1 hora" },
     { id: 4, user: "El_Bryan_HxC", message: "ta weno el diseño corte antiguo, aguante el reggaeton old school", time: "Hace 3 horas" },
   ]);
+=======
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  const [shouts, setShouts] = useState<Shout[]>([]);
+>>>>>>> e173e6c (feat(emoticons): add msn-style emoticons with parser and picker)
   const [newMessage, setNewMessage] = useState("");
   const [username, setUsername] = useState("Visitante");
   const [isOpen, setIsOpen] = useState(true);
+<<<<<<< HEAD
+=======
+  const [isOnline, setIsOnline] = useState(false); // Estado de conexión
+  const [isSending, setIsSending] = useState(false);
+  const [lastShoutTime, setLastShoutTime] = useState(0);
+
+  // Lógica Anti-Spam
+  const [sessionMessageCount, setSessionMessageCount] = useState(0); 
+  const [captcha, setCaptcha] = useState<{ num1: number, num2: number } | null>(null);
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
+
+>>>>>>> e173e6c (feat(emoticons): add msn-style emoticons with parser and picker)
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastFeedbackIndex = useRef<number>(-1);
 
@@ -152,6 +183,7 @@ const Shoutbox = () => {
     });
   };
 
+<<<<<<< HEAD
   const handleSend = () => {
     if (!newMessage.trim()) return;
 
@@ -164,6 +196,106 @@ const Shoutbox = () => {
 
     setShouts([newShout, ...shouts]);
     setNewMessage("");
+=======
+  const insertEmoticon = (code: string) => {
+    const input = inputRef.current;
+    if (input) {
+      // Insertar en la posición del cursor
+      const start = input.selectionStart || 0;
+      const end = input.selectionEnd || 0;
+      const text = newMessage;
+      const newText = text.substring(0, start) + code + text.substring(end);
+      setNewMessage(newText);
+      
+      // Devolver el foco al input y poner el cursor después del emoji
+      setTimeout(() => {
+        input.focus();
+        input.setSelectionRange(start + code.length, start + code.length);
+      }, 0);
+    } else {
+      // Fallback por si no hay ref
+      setNewMessage(prev => prev + code);
+    }
+  };
+
+  const handleSend = async () => {
+    if (!newMessage.trim()) return;
+
+    // VALIDACIÓN COOLDOWN (15 segundos)
+    const now = Date.now();
+    const timeSinceLastShout = now - lastShoutTime;
+    const cooldownMs = 15000;
+
+    if (timeSinceLastShout < cooldownMs) {
+        const secondsRemaining = Math.ceil((cooldownMs - timeSinceLastShout) / 1000);
+        toast({
+            title: "⏳ Calma tu flow",
+            description: `Espera ${secondsRemaining} segundos antes de enviar otro mensaje.`,
+            variant: "destructive",
+        });
+        return;
+    }
+
+    // VALIDACIÓN ANTI-SPAM
+    if (sessionMessageCount >= 1 && captcha) {
+        const sum = captcha.num1 + captcha.num2;
+        if (parseInt(captchaAnswer) !== sum) {
+            toast({
+                title: "🚫 Acceso denegado",
+                description: "Suma incorrecta. Eres un robot?",
+                variant: "destructive",
+            });
+            generateCaptcha();
+            return;
+        }
+    }
+
+    setIsSending(true);
+
+    try {
+        // CENSURA: Filtrar mensaje antes de enviar
+        const cleanedMessage = censorMessage(newMessage);
+
+        // FIREBASE: Guardar en la nube
+        await addDoc(collection(db, "shouts"), {
+            user: username || "Anonimo",
+            message: cleanedMessage,
+            timestamp: serverTimestamp(), // Hora del servidor (importante para orden global)
+            avatar: "", // Opcional
+        });
+
+        setNewMessage("");
+        setSessionMessageCount(prev => prev + 1);
+        setLastShoutTime(Date.now());
+        
+        // Activar captcha para el siguiente
+        if (sessionMessageCount >= 0) {
+            generateCaptcha();
+        }
+
+        toast({
+            title: "Enviado al mundo 🌍",
+            description: "Tu mensaje está en vivo.",
+            className: "bg-blue-900 border-blue-500 text-white text-xs",
+        });
+
+        // Reproducir sonido MSN al enviar
+        if (audioRef.current) {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(() => {});
+        }
+
+    } catch (error) {
+        console.error("Error enviando shout:", error);
+        toast({
+            title: "Error",
+            description: "No se pudo conectar al servidor de chat.",
+            variant: "destructive",
+        });
+    } finally {
+        setIsSending(false);
+    }
+>>>>>>> e173e6c (feat(emoticons): add msn-style emoticons with parser and picker)
   };
 
   if (!isOpen) {
@@ -217,7 +349,7 @@ const Shoutbox = () => {
                     <span className="text-[10px] text-muted-foreground">{shout.time}</span>
                   </div>
                   <p className="text-xs text-foreground/90 break-words leading-tight bg-white/5 p-2 rounded-sm mt-0.5 border border-white/5 shadow-inner">
-                    {shout.message}
+                    {parseMessage(shout.message)}
                   </p>
                 </div>
               </div>
@@ -252,7 +384,41 @@ const Shoutbox = () => {
             </TooltipProvider>
           </div>
           <div className="flex gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="h-8 w-8 shrink-0 text-yellow-400 hover:text-yellow-300 hover:bg-white/10"
+                >
+                  <Smile className="w-5 h-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-2 bg-white/95 border-2 border-blue-500 shadow-xl" side="top" align="start">
+                <ScrollArea className="h-48 w-full pr-2">
+                  <div className="grid grid-cols-6 gap-1">
+                    {Object.entries(EMOTICON_MAP).map(([code, filename]) => (
+                      <button
+                        key={code}
+                        onClick={() => insertEmoticon(code)}
+                        className="p-1 hover:bg-blue-100 rounded transition-colors flex items-center justify-center"
+                        title={code}
+                      >
+                        <img 
+                          src={`/emoticons/${filename}`} 
+                          alt={code} 
+                          className="w-5 h-5 object-contain"
+                          style={{ imageRendering: 'pixelated' }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
+
             <Input 
+              ref={inputRef}
               className="h-8 text-xs bg-black/40 border-primary/30 text-white placeholder:text-white/30 focus-visible:ring-primary/50" 
               placeholder="Escribe un mensaje..." 
               value={newMessage}
